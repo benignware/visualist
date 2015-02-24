@@ -25,7 +25,7 @@ _v('#arc', 200, 200)
   .arc(100, 100, 80, Math.PI * 0.25, Math.PI * 1.75, 1, {fill: 'blue'});
 ```
 
-#### attr( name, value )
+#### attr( name, [value] )
 Get the value of an attribute for the first element in the set of matched elements or set one or more attributes for every matched element.
 
 #### bbox()
@@ -42,10 +42,13 @@ _v('#circle', 100, 100)
   .circle(50, 50, 40, {stroke: 'green', strokeWidth: 4, fill: 'yellow'});
 ```
 
+#### computedTextLength()
+Retrieves the computed text length of the first element in the set if applicable and the element has been rendered.
+
 #### create( tagName, [attrs] )
 Creates and returns a new element with the specifed tagname.
 
-#### css( name, value )
+#### css( name, [value] )
 Get the value of a computed style property for the first element in the set of matched elements or set one or more CSS properties for every matched element.
 
 #### ellipse( cx, cy, rx, ry, [attrs])
