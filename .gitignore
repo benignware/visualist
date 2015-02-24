@@ -1,0 +1,13 @@
+# Node
+node_modules
+
+# Eclipse
+.project
+.externalToolBuilders
+
+# Mac OS
+.DS_Store
+*/.DS_Store
+
+# GFM Markdown preview
+.README.md.html
