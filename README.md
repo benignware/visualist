@@ -7,10 +7,17 @@ visualist
 ### Constructor
 
 #### _v(selector, width, height, [attrs]);
+
+*Create from an existing selector*
 ```js
-// Create a new svg canvas
+var svg = _v("svg", 400, 300);
+```
+
+*Create a new svg canvas*
+```js
 var svg = _v(400, 300);
 ```
+
 
 ### Components
 
