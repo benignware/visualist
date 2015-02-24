@@ -10,14 +10,13 @@ visualist
 
 *Create from an existing selector*
 ```js
-var svg = _v("svg", 400, 300);
+_v("svg", 400, 300);
 ```
 
-*Create a new svg canvas*
+*Create a new svg canvas and append to body*
 ```js
-var svg = _v(400, 300);
+_v(400, 300).prependTo(document.body);
 ```
-
 
 ### Components
 

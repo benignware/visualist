@@ -1,4 +1,4 @@
-test("Arc", function(assert) {
+test("arc", function(assert) {
   
   _v('#arc', 200, 200)
     .arc(100, 100, 80, Math.PI * 0.25, Math.PI * 1.75, 1, {fill: 'blue'});
@@ -11,7 +11,7 @@ test("Arc", function(assert) {
   
 });
 
-test("Graph", function(assert) {
+test("graph", function(assert) {
   
   _v('#graph', 500, 210)
     .graph([{x: 20, y: 20}, {x: 40, y: 25}, {x: 60, y: 40}, {x: 80, y: 120}, {x: 120, y: 140}, {x: 200, y: 180}], {style: "fill:none;stroke:black;stroke-width:3"});
@@ -24,7 +24,7 @@ test("Graph", function(assert) {
   
 });
 
-test("Textbox", function(assert) {
+test("textbox", function(assert) {
   
   _v('#textbox', 200, 100)
     .rect(0, 0, 200, 100, {style: "fill:darkgray;stroke-width:1;stroke:rgb(0,0,0)"})
@@ -39,7 +39,7 @@ test("Textbox", function(assert) {
   
 });
 
-test("List", function(assert) {
+test("list", function(assert) {
   
   _v('#list', 200, 100)
     .list(10, 10, [{label: "Item 1"}, {label: "Item 2"}]);
@@ -53,7 +53,7 @@ test("List", function(assert) {
 });
 
 
-test("Listbox", function(assert) {
+test("listbox", function(assert) {
   
  _v('#listbox', 200, 240)
     .rect(0, 0, 200, 240, {style: "fill:darkgray;stroke-width:1;stroke:rgb(0,0,0)"})

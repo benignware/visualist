@@ -1,17 +1,17 @@
-test("Rectangle", function(assert) {
+test("rect", function(assert) {
   
-  _v('#rectangle', 400, 110)
+  _v('#rect', 400, 110)
     .rect(0, 0, 300, 100, {style: "fill:rgb(0,0,255);stroke-width:3;stroke:rgb(0,0,0)"});
     
   assert.domEqual(
-    $('#rectangle'),
-    $('<svg height="110px" id="rectangle" width="400px" xmlns="http://www.w3.org/2000/svg"><rect height="100" style="fill:rgb(0,0,255);stroke-width:3;stroke:rgb(0,0,0)" width="300" x="0" y="0"></rect></svg>'),
+    $('#rect'),
+    $('<svg height="110px" id="rect" width="400px" xmlns="http://www.w3.org/2000/svg"><rect height="100" style="fill:rgb(0,0,255);stroke-width:3;stroke:rgb(0,0,0)" width="300" x="0" y="0"></rect></svg>'),
     'Markup should match the expected results'
   );
   
 });
 
-test("Circle", function(assert) {
+test("circle", function(assert) {
   
   _v('#circle', 100, 100)
     .circle(50, 50, 40, {stroke: 'green', strokeWidth: 4, fill: 'yellow'});
@@ -24,7 +24,7 @@ test("Circle", function(assert) {
 
 });
 
-test("Ellipse", function(assert) {
+test("ellipse", function(assert) {
   
   _v('#ellipse', 500, 140)
     .ellipse(200, 80, 100, 50, {style: "fill:yellow;stroke:purple;stroke-width:2"});
@@ -37,7 +37,7 @@ test("Ellipse", function(assert) {
 
 });
 
-test("Line", function(assert) {
+test("line", function(assert) {
   
   _v('#line', 500, 210)
     .line(0, 0, 200, 200, {style: "stroke:rgb(255,0,0);stroke-width:2"});
@@ -50,7 +50,7 @@ test("Line", function(assert) {
 
 });
 
-test("Polygon", function(assert) {
+test("polygon", function(assert) {
   
   _v('#polygon', 500, 210)
     .polygon([{x: 200, y: 10}, {x: 250, y: 190}, {x: 160, y: 210}], {style: "fill:lime;stroke:purple;stroke-width:1"});
@@ -63,7 +63,7 @@ test("Polygon", function(assert) {
 
 });
 
-test("Polyline", function(assert) {
+test("polyline", function(assert) {
   
   _v('#polyline', 500, 210)
     .polyline([{x: 20, y: 20}, {x: 40, y: 25}, {x: 60, y: 40}, {x: 80, y: 120}, {x: 120, y: 140}, {x: 200, y: 180}], {style: "fill:none;stroke:black;stroke-width:3"});
@@ -76,7 +76,7 @@ test("Polyline", function(assert) {
 
 });
 
-test("Path", function(assert) {
+test("path", function(assert) {
   
   _v('#path', 400, 200)
     .path("M150 0 L75 200 L225 200 Z");
@@ -89,7 +89,7 @@ test("Path", function(assert) {
 
 });
 
-test("Text", function(assert) {
+test("text", function(assert) {
   
   _v('#text', 200, 30)
     .text(0, 15, "I love SVG!", {fill: 'red'});
@@ -100,4 +100,17 @@ test("Text", function(assert) {
     'Markup should match the expected results'
   );
 
+});
+
+test("g", function(assert) {
+  
+  _v('#g', 400, 110)
+    .g();
+  
+  assert.domEqual(
+    $('#g'),
+    $('<svg height="110px" width="400px" id="g" xmlns="http://www.w3.org/2000/svg"><g></g></svg>'),
+    'Markup should match the expected results'
+  );
+  
 });

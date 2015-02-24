@@ -63,24 +63,70 @@ var _v = (function() {
       }
       return dest;
     },
-  
-    css = function(elem, name, value) {
-      var map = {}, cssText = null;
-      if (typeof name === 'object') {
-        map = name;
-      } else if (typeof value !== "undefined") {
-        map[name] = value;
+    
+    toArray = function(obj) {
+      
+      //return obj && (obj.length && [].slice.call(obj) || [obj]);
+      
+      if (typeof obj === "undefined") {
+        return [];
       }
-      cssText = Object.keys(map).map(function(name) {
-        return hyphenate(name) + ": " + map[name];
-      }).join("; ");
-      if (cssText && cssText.length) {
-        elem.style.cssText = elem.style.cssText + cssText;
-        return this;
+      
+      var l = obj && obj.length || 0, i, result = [];
+      for (i = 0; i < l; i++) {
+        if (obj[i]) {
+          result.push(obj[i]);
+        }
       }
-      return elem.style[name] || window.getComputedStyle(elem, null).getPropertyValue(name);
+      
+      return result.length && result || [obj];
     },
-  
+    
+    // DOM Manipulation
+    
+    /**
+     * 
+     */
+    
+    parent = function(elem) {
+      return elem.parentNode;
+    },
+    
+    append = function( parent, child ) {
+      parent = parent[0] || parent;
+      toArray(child).forEach(function(child) {
+        parent.appendChild(child);
+      });
+    },
+    
+    prepend = function( parent, child ) {
+      parent = parent[0] || parent;
+      toArray(child).forEach(function(child) {
+        parent.insertBefore(child, parent.firstChild);
+      });
+    },
+    
+    remove = function( elem, child ) {
+      if (child) {
+        toArray(child).forEach(function(child) {
+          elem.removeChild(child);
+        });
+      } else if (elem.parentNode) {
+        elem.parentNode.removeChild(elem);
+      }
+    },
+    
+    html = function(elem, string) {
+      if (string) {
+        elem.innerHTML = string;
+      }
+      return elem.innerHTML;
+    },
+    
+    text = function(elem) {
+      return elem.textContent;
+    },
+    
     attr = function (elem, name, value) {
       var result = null, obj = {}, prop;
       if (typeof name === 'object') {
@@ -109,9 +155,41 @@ var _v = (function() {
           }
         }
       }
-      return result || elem;
+      return result;
+    },
+  
+    css = function(elem, name, value) {
+      var map = {}, cssText = null;
+      if (typeof name === 'object') {
+        map = name;
+      } else if (typeof value !== "undefined") {
+        map[name] = value;
+      }
+      cssText = Object.keys(map).map(function(name) {
+        return hyphenate(name) + ": " + map[name];
+      }).join("; ");
+      if (cssText && cssText.length) {
+        elem.style.cssText = elem.style.cssText + cssText;
+        return null;
+      }
+      return elem.style[name] || window.getComputedStyle(elem, null).getPropertyValue(name);
     },
     
+    addClass = function(elem, className) {
+      elem.classList.add(className);
+    },
+    
+    hasClass = function(elem, className) {
+      return elem.classList.contains(className);
+    },
+    
+    removeClass = function(elem, className) {
+      elem.classList.remove(className);
+    },
+    
+    toggleClass = function(elem, className) {
+      elem.classList.toggle(className);
+    },
     
     /**
      * Gets a pair of bezier control points
@@ -250,17 +328,49 @@ var _v = (function() {
   // Public Components
   
   _v.fn.extend({
+    
+    size: function() {
+      return this.length;
+    },
+    
+    toArray: function() {
+      return toArray(this);
+    },
+    
+    get: function( index ) {
+      return typeof index !== 'undefined' ? index < 0 ? this[this.length - index] : this[index] : this.toArray();
+    },
+    
+    index: function() {
+      return this[0] && toArray(this[0].parentNode.children).indexOf(this[0]) || -1;
+    },
+    
     /**
      * Appends the specified child to the first element in the set.
      * @param {Object} child
      */
     append: function( child ) {
-      var self = this, children = child instanceof Array ? child : [child];
-      if (self[0] && child) {
-        children.forEach(function(child) {
-          self[0].appendChild(child.nodeType === 3 ? child : _v(child)[0]);
-        });
-      }
+      this[0] && append(this[0], child);
+      return this;
+    },
+    appendTo: function( parent ) {
+      this.forEach(function(elem) {
+        append(parent, elem);
+      });
+      return this;
+    },
+    /**
+     * Prepends the specified child to the first element in the set.
+     * @param {Object} child
+     */
+    prepend: function( child ) {
+      this[0] && prepend(this[0], child);
+      return this;
+    },
+    prependTo: function( parent ) {
+      this.forEach(function(elem) {
+        prepend(parent, elem);
+      });
       return this;
     },
     /**
@@ -268,15 +378,8 @@ var _v = (function() {
      * @param {Object} child
      */
     remove: function( child ) {
-      var self = this, children = typeof child !== 'undefined' ? child instanceof Array ? child : [child] : null;
       this.forEach(function(elem) {
-        if (children) {
-          children.forEach(function(child) {
-            elem.removeChild(child);
-          });
-        } else if (elem.parentNode) {
-          elem.parentNode.removeChild(elem);
-        }
+        remove(elem, child);
       });
       return this;
     },
@@ -292,6 +395,24 @@ var _v = (function() {
       });
     },
     /**
+     * Returns the parent node of the first element in the set.
+     */
+    parent: function() {
+      return this[0] && parent(this[0]);
+    },
+    /**
+     * Retrieves or sets the innerHTML of the first element in the set. 
+     */
+    html: function( string ) {
+      if (string) {
+        this.forEach(function(elem) {
+          html(elem, string);
+        });
+        return this;
+      }
+      return this[0] && html(this[0]);
+    },
+    /**
      * Get the value of an attribute for the first element in the set of matched elements or set one or more attributes for every matched element.
      * @param {String} name
      * @param {Object} value
@@ -300,7 +421,7 @@ var _v = (function() {
       var result = this;
       this.forEach(function(elem) {
         var ret = attr(elem, name, value);
-        if (ret !== elem) {
+        if (ret !== null) {
           result = ret;
         }
       });
@@ -315,7 +436,7 @@ var _v = (function() {
       var result = this;
       this.forEach(function(elem) {
         var ret = css(elem, name, value);
-        if (ret !== elem) {
+        if (ret !== null) {
           result = ret;
         }
       });
@@ -369,7 +490,7 @@ var _v = (function() {
      * Creates and returns a group layer on the first element in the set
      * @param {Object} attrs
      */
-    group: function( attrs ) {
+    g: function( attrs ) {
       var g = this.create('g', attrs);
       _v(this[0]).append(g);
       return g;
@@ -681,7 +802,7 @@ var _v = (function() {
             shape = itemOpts.bullet.shape,
             label = itemOpts.label,
             bulletAttrs,
-            itemLayer = _velem.group(),
+            itemLayer = _velem.g(),
             lineHeight = parseFloat(_velem.css('line-height')),
             fontSize = parseFloat(_velem.css('font-size')),
             bulletSize = fontSize * 0.65,
