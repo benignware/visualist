@@ -350,9 +350,15 @@ var _v = (function() {
      * @param {Object} child
      */
     append: function( child ) {
-      this[0] && append(this[0], child);
+      if (this[0]) {
+        append(this[0], child);
+      }
       return this;
     },
+    /**
+     * Appends the current set of elements to the specified parent
+     * @param {Object} child
+     */
     appendTo: function( parent ) {
       this.forEach(function(elem) {
         append(parent, elem);
@@ -364,9 +370,15 @@ var _v = (function() {
      * @param {Object} child
      */
     prepend: function( child ) {
-      this[0] && prepend(this[0], child);
+      if (this[0]) {
+        prepend(this[0], child);
+      }
       return this;
     },
+    /**
+     * Prepends the current set of elements to the specified parent
+     * @param {Object} child
+     */
     prependTo: function( parent ) {
       this.forEach(function(elem) {
         prepend(parent, elem);
@@ -393,24 +405,13 @@ var _v = (function() {
           i--;
         }
       });
+      return this;
     },
     /**
      * Returns the parent node of the first element in the set.
      */
     parent: function() {
       return this[0] && parent(this[0]);
-    },
-    /**
-     * Retrieves or sets the innerHTML of the first element in the set. 
-     */
-    html: function( string ) {
-      if (string) {
-        this.forEach(function(elem) {
-          html(elem, string);
-        });
-        return this;
-      }
-      return this[0] && html(this[0]);
     },
     /**
      * Get the value of an attribute for the first element in the set of matched elements or set one or more attributes for every matched element.
@@ -455,7 +456,7 @@ var _v = (function() {
      * @param {Number} width
      */
     width: function( width ) {
-      console.warn("deprecated");
+      //console.warn("deprecated");
       if (typeof width === 'undefined' && this[0]) {
         return this[0].getBoundingClientRect().width;
       }
@@ -467,7 +468,7 @@ var _v = (function() {
      * @param {Number} height
      */
     height: function( height ) {
-      console.warn("deprecated");
+      //console.warn("deprecated");
       if (typeof height === 'undefined' && this[0]) {
         return this[0].getBoundingClientRect().height;
       }
@@ -609,9 +610,9 @@ var _v = (function() {
         
         var
           opts = extend({
-            smooth: true, 
+            smooth: false, 
             tension: 0.4,
-            approximate: true
+            approximate: false
           }, options),
           t = !isNaN( opts.tension ) ? opts.tension : 0.5,
           el = _v(elem), 
@@ -659,7 +660,9 @@ var _v = (function() {
         delete opts.tension;
         delete opts.approximate;
         
-        path.attr(extend(opts, {
+        path.attr(extend({
+          fill: 'none'
+        }, opts, {
           d: pathStr
         }));
         
@@ -675,13 +678,19 @@ var _v = (function() {
      * @param {Boolean} counterclockwise
      * @param {Object} attrs
      */
-    arc: function(x, y, r, sAngle, eAngle, counterclockwise, attrs) {
+    arc: function(cx, cy, r, sAngle, eAngle, counterclockwise, attrs) {
       counterclockwise = typeof counterclockwise === 'boolean' ? counterclockwise : false;
-      return shape.call(this, "path", {
-        d: "M" + x + "," + y + 
-          " L" + (x + cos(sAngle) * r) + "," + (y + sin(sAngle) * r) +
+      var d = 'M ' + cx + ' ' + cy;
+      if (eAngle - sAngle === Math.PI * 2) {
+        // Circle
+        d+= ' m -' + r + ', 0 a ' + r + ',' + r + ' 0 1,0 ' + (r * 2) + ',0 a ' + r + ',' + r + ' 0 1,0 -' + (r * 2) + ',0';
+      } else {
+        d+= " L" + (cx + cos(sAngle) * r) + "," + (cy + sin(sAngle) * r) +
           " A" + r + "," + r + " 0 " + (eAngle - sAngle > PI ? 1 : 0) + "," + (counterclockwise ? 0 : 1) +
-          " " + (x + cos(eAngle) * r) + "," + (y + sin(eAngle) * r) + " Z"
+          " " + (cx + cos(eAngle) * r) + "," + (cy + sin(eAngle) * r) + " Z";
+      }
+      return shape.call(this, "path", {
+        d: d
       }, attrs);
     },
     /**
@@ -776,7 +785,7 @@ var _v = (function() {
      */
     listbox: function( x, y, width, height, items, options ) {
       
-      items = (items || []).map(function(item) {
+      items = toArray(items).map(function(item) {
         return typeof item === 'string' ? {label: item} : item;
       });
       
@@ -785,7 +794,7 @@ var _v = (function() {
       options = extend({}, {
         horizontal: false,
         bullet: {
-          shape: 'rect'
+          shape: 'circle'
         }
       }, options);
       
@@ -806,7 +815,7 @@ var _v = (function() {
             lineHeight = parseFloat(_velem.css('line-height')),
             fontSize = parseFloat(_velem.css('font-size')),
             bulletSize = fontSize * 0.65,
-            spacing = lineHeight * 0.25,
+            spacing = lineHeight * 0.2,
             itemWidth,
             itemHeight;
           

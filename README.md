@@ -15,13 +15,16 @@ _v("svg", 400, 300);
 
 *Create a new svg canvas and append to body*
 ```js
-_v(400, 300).prependTo(document.body);
+_v(400, 300).appendTo(document.body);
 ```
 
 ### Components
 
 #### append( child )
 Appends the specified child to the first element in the set.
+
+#### appendTo( parent )
+Appends the current set of elements to the specified parent
 
 #### arc( x, y, r, sAngle, eAngle, counterclockwise, [attrs] )
 The arc() method creates an arc/curve (used to create circles, or parts of circles).
@@ -57,7 +60,7 @@ Creates and returns a new element with the specifed tagname.
 #### css( name, [value] )
 Get the value of a computed style property for the first element in the set of matched elements or set one or more CSS properties for every matched element.
 
-#### ellipse( cx, cy, rx, ry, [attrs])
+#### ellipse( cx, cy, rx, ry, [attrs] )
 Draws an ellipse on every element in the set.
 
 ```js
@@ -65,16 +68,22 @@ _v('#ellipse', 500, 140)
   .ellipse(200, 80, 100, 50, {style: "fill:yellow;stroke:purple;stroke-width:2"});
 ```
 
+#### g( [attrs] )
+Creates and returns a group layer on the first element in the set
+
 #### graph( points, [options] )
-Renders a smooth graph on every element in the set.
+Renders a graph on every element in the set. Set option `smooth` to true to render a curved graph. You can also provide a `tension`-option as floating point and a bool-flag `approximate`-options to control smoothiness.
 
 ```js
 _v('#graph', 500, 210)
   .graph([{x: 20, y: 20}, {x: 40, y: 25}, {x: 60, y: 40}, {x: 80, y: 120}, {x: 120, y: 140}, {x: 200, y: 180}], {style: "fill:none;stroke:black;stroke-width:3"});
 ```
 
-#### group( [attrs] )
-Creates and returns a group layer on the first element in the set
+#### get( [index] )
+Retrieve one or all elements in the set.
+
+#### index()
+Search for a given element from among the matched elements.
 
 #### line( x1, y1, x2, y2, [attrs] )
 Draws a line on every element in the set.
@@ -101,6 +110,9 @@ _v('#listbox', 200, 240)
   .listbox(10, 10, 180, 220, ["Lorem ipsum dolor sit amet", "Consectetuer adipiscing elit", "Aenean commodo ligula eget dolor. Aenean massa.", "Cum sociis natoque penatibus et magnis dis parturient montes"], {fill: "ghostwhite"});
 ```
 
+#### parent()
+Returns the parent node of the first element in the set.
+
 #### path( d, [attrs] )
 Draws a path on every element in the set.
 
@@ -109,7 +121,7 @@ _v('#path', 400, 200)
   .path("M150 0 L75 200 L225 200 Z");
 ```
 
-#### polygon( points, [attrs])
+#### polygon( points, [attrs] )
 Draws a polygon on every element in the set.
 
 ```js
@@ -117,13 +129,19 @@ _v('#polygon', 500, 210)
   .polygon([{x: 200, y: 10}, {x: 250, y: 190}, {x: 160, y: 210}], {style: "fill:lime;stroke:purple;stroke-width:1"});
 ```
 
-#### polyline( points, [attrs])
+#### polyline( points, [attrs] )
 Draws a polyline on every element in the set.
 
 ```js
 _v('#polyline', 500, 210)
   .polyline([{x: 20, y: 20}, {x: 40, y: 25}, {x: 60, y: 40}, {x: 80, y: 120}, {x: 120, y: 140}, {x: 200, y: 180}], {style: "fill:none;stroke:black;stroke-width:3"});
 ```
+
+#### prepend( child )
+Prepends the specified child to the first element in the set.
+
+#### prependTo( parent )
+Prepends the current set of elements to the specified parent.
 
 #### rectangle( x, y, width, height [attrs] )
 Draws a rectangle on every element in the set.
@@ -135,6 +153,9 @@ _v('#rectangle', 400, 110)
 
 #### remove( [child] )
 Removes all elements in the set or removes the specified child from the set of matched elements.
+
+#### size()
+Return the number of elements in the set.
 
 #### text( x, y, string, attrs )
 Renders text on every element in the set.
@@ -152,3 +173,6 @@ _v('#textbox', 200, 100)
   .rect(0, 0, 200, 100, {style: "fill:darkgray;stroke-width:1;stroke:rgb(0,0,0)"})
   .textbox(10, 10, 180, 80, "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.", {fill: 'ghostwhite'});
 ```
+
+#### toArray()
+Retrieve all the elements contained in the set as an array.

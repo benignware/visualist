@@ -51,7 +51,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', ['browserify', 'uglify']);
   
-  grunt.registerTask('test', ['jshint', 'qunit']);
+  grunt.registerTask('test', ['jshint', 'build', 'qunit']);
   
-  grunt.registerTask('default', ['build', 'test']);
+  grunt.registerTask('default', ['build']);
 };
