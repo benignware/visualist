@@ -1,0 +1,21 @@
+{
+  "name": "visualist",
+  "version": "0.0.1",
+  "homepage": "https://github.com/benignware/visualist",
+  "authors": [
+    "Rafael Nowrotek <mail@benignware.com>"
+  ],
+  "description": "Minimalist svg dom library",
+  "main": "dist/visualist.min.js",
+  "keywords": [
+    "svg"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
