@@ -3,6 +3,8 @@ visualist
 
 > Minimalist svg dom library
 
+[Demo](http://benignware.github.io/visualist)
+
 ## Usage
 
 Add the library to your stack:
