@@ -254,3 +254,9 @@ _v('#textbox', 350, 200)
 
 #### toArray()
 Retrieve all the elements contained in the set as an array.
+
+## Changelog
+
+* v0.0.3 - Fixed bbox null pointer
+* v0.0.2 - Added bower.json
+* v0.0.1 - Initial Release
