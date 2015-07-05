@@ -93,10 +93,14 @@ var _v = (function() {
     },
     
     append = function( parent, child ) {
-      parent = parent[0] || parent;
-      toArray(child).forEach(function(child) {
-        parent.appendChild(child);
-      });
+      parent = parent && parent[0] || parent;
+      if (parent && parent.appendChild) {
+        toArray(child).forEach(function(child) {
+          if (child) {
+            parent.appendChild(child);
+          }
+        });
+      }
     },
     
     prepend = function( parent, child ) {
@@ -361,7 +365,9 @@ var _v = (function() {
      */
     appendTo: function( parent ) {
       this.forEach(function(elem) {
-        append(parent, elem);
+        if (parent) {
+          append(parent, elem);
+        }
       });
       return this;
     },
@@ -479,7 +485,11 @@ var _v = (function() {
      * Retrieves the bounding box of the first element in the set.
      */
     bbox: function() {
-      return this[0] && this[0].getBBox();
+      try {
+        return this[0] && this[0].getBBox();
+      } catch (e) {
+        return {width: 0, height: 0};
+      } 
     },
     /**
      * Retrieves the computed text length of the first element in the set if applicable.
