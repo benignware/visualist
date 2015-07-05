@@ -37,3 +37,6 @@ node_modules
 
 # GFM Markdown preview
 .README.md.html
+
+# Site
+site
