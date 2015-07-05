@@ -2,6 +2,7 @@
   "name": "visualist",
   "description": "Minimalist svg dom library",
   "version": "0.0.3",
+  "homepage": "http://benignware.github.io/visualist",
   "author": {
     "name": "Benignware",
     "email": "mail@benignware.com",
