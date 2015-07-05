@@ -2,16 +2,31 @@
   "name": "visualist",
   "description": "Minimalist svg dom library",
   "version": "0.0.2",
+  "author": {
+    "name": "Benignware",
+    "email": "mail@benignware.com",
+    "url": "https://github.com/benignware"
+  },
   "repository": {
     "type": "git",
-    "url": "git://github.com/benignware/jquery-charts.git"
+    "url": "git://github.com/benignware/visualist.git"
   },
+  "bugs": {
+    "url": "https://github.com/benignware/visualist/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/benignware/visualist.git"
+  },
+  "homepage": "https://github.com/benignware/visualist",
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-browserify": "^3.4.0",
     "grunt-contrib-copy": "^0.8.0",
     "grunt-contrib-jshint": "~0.4.3",
     "grunt-contrib-qunit": "^0.5.2",
-    "grunt-contrib-uglify": "^0.8.0"
+    "grunt-contrib-uglify": "^0.8.0",
+    "grunt-gh-pages": "^0.10.0",
+    "grunt-livemd": "0.0.1"
   }
 }
