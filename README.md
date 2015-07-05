@@ -10,7 +10,7 @@ visualist
 Add the library to your stack:
 
 ```html
-<script src="visualist.js"></script>
+<script src="visualist.min.js"></script>
 ```
 
 Provide an empty svg element in the document:
