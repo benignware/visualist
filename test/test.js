@@ -32,13 +32,11 @@ test("toArray", function(assert) {
 });
 
 test("index", function(assert) {
-  
-  assert.domEqual(
+  assert.equal(
     _v("#get > circle[fill='blue']").index(),
     $("#get > circle[fill='blue']").index(),
     'Result should match jquery'
   );
-  
 });
 
 test("attr", function(assert) {
@@ -269,11 +267,11 @@ test("arc", function(assert) {
   
   _v('#arc', 200, 200)
     .arc(100, 100, 80, Math.PI * 0.25, Math.PI * 1.75, 1, {fill: 'blue'});
-  
+console.log("$('#arc'): ", $('#arc').html());
   assert.domEqual(
     $('#arc'),
-    $('<svg height=\"200px\" id=\"arc\" width=\"200px\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M 100 100 L156.5685424949238,156.5685424949238 A80,80 0 1,1 156.5685424949238,43.43145750507618 Z\" fill=\"blue\"></path></svg>',
-    'Markup should match the expected results')
+    $('<svg height=\"200px\" id=\"arc\" width=\"200px\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M 100, 100 L156.57,156.57 A80,80 0 1,1 156.57,43.43 Z\" fill=\"blue\"></path></svg>'),    
+    'Markup should match the expected results'
   );
   
 });
