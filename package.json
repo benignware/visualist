@@ -1,7 +1,7 @@
 {
   "name": "visualist",
   "description": "Minimalist svg dom library",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "http://benignware.github.io/visualist",
   "author": {
     "name": "Benignware",
