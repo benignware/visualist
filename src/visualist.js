@@ -12,6 +12,26 @@ var _v = (function() {
     floor = MATH.floor,
   
     /**
+     * Rounds a number to precision
+     */ 
+    round = function(num, digits) {
+      digits = typeof digits === 'number' ? digits : 1;
+      if (typeof num === 'object') {
+        for (var x in num) {
+          num[x] = round(num[x]);
+        }
+      } else {
+        // Actually round number
+        var value = parseFloat(num);
+        if (!isNaN(value) && new String(value).length === new String(num).length) {
+          value = parseFloat(value.toFixed(digits));
+          return value;
+        }
+      }
+      return num;
+    },
+  
+    /**
      * Camelize a string
      * @param {String} string
      */ 
@@ -64,6 +84,12 @@ var _v = (function() {
       return dest;
     },
     
+    /**
+     * Converts to Array
+     * @param {Boolean} true
+     * @param {Object} destination
+     * @param {Object} source
+     */
     toArray = function(obj) {
       
       //return obj && (obj.length && [].slice.call(obj) || [obj]);
@@ -83,10 +109,6 @@ var _v = (function() {
     },
     
     // DOM Manipulation
-    
-    /**
-     * 
-     */
     
     parent = function(elem) {
       return elem.parentNode;
@@ -132,7 +154,7 @@ var _v = (function() {
     },
     
     attr = function (elem, name, value) {
-      var result = null, obj = {}, prop;
+      var result = null, obj = {}, prop, px = ['x', 'y', 'dx', 'dy', 'cx', 'cy'];
       if (typeof name === 'object') {
         obj = name;
       } else if (typeof name !== 'undefined'){
@@ -151,6 +173,7 @@ var _v = (function() {
               value = Object.keys(value).map(mapStyles).join("; ");
             }
             if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+              value = px.indexOf(prop) >= 0 ? round(value) : value;
               elem.setAttribute(prop, value);
             }
           } else if (!result) {
@@ -324,7 +347,7 @@ var _v = (function() {
   function shape(tagName, params, attrs, children) {
     var self = this;
     this.forEach(function(elem) {
-      _v(elem).append(self.create(tagName, extend(true, {}, attrs, params)).append(children));
+      _v(elem).append(self.create(tagName, extend(true, {}, attrs, round(params))).append(children));
     });
     return this;
   }
@@ -486,9 +509,16 @@ var _v = (function() {
      */
     bbox: function() {
       try {
-        return this[0] && this[0].getBBox();
+        var b = this[0] && this[0].getBBox();
+        b = {
+          x: b.x,
+          y: b.y,
+          width: b.width,
+          height: b.height
+        };
+        return b;
       } catch (e) {
-        return {width: 0, height: 0};
+        return {x: 0, y: 0, width: 0, height: 0};
       } 
     },
     /**
@@ -622,7 +652,7 @@ var _v = (function() {
           opts = extend({
             smooth: false, 
             tension: 0.4,
-            approximate: false
+            approximate: true
           }, options),
           t = !isNaN( opts.tension ) ? opts.tension : 0.5,
           el = _v(elem), 
@@ -642,28 +672,31 @@ var _v = (function() {
           for (i = 0; i < points.length; i++ ) {
             p = points[i];
             pathStr+= i > 0 ? "L" : "M";
-            pathStr+= p.x + " " + p.y + " ";
+            pathStr+= round(p.x) + " " + round(p.y) + " ";
           } 
-        } else if (opts.approximate) {
-          p = points[0];
-          pathStr+= "M" + p.x + " " + p.y + " ";
-          for (i = 1; i < points.length - 1; i++) {
-              c = (points[i].x + points[i + 1].x) / 2;
-              d = (points[i].y + points[i + 1].y) / 2;
-              pathStr+= "Q" + points[i].x + " " + points[i].y + " " + c + " " + d + " ";
-          }
-          pathStr+= "T" + points[i].x + " " + points[i].y + " ";
         } else {
-          p = points[0];
-          pathStr+= "M" + p.x + " " + p.y + " ";
-          for (i = 1; i < points.length - 1; i+=1) {
-            p = points[i - 1];
-            p1 = points[i];
-            p2 = points[i + 1];
-            cps = getControlPoints(p.x, p.y, p1.x, p1.y, p2.x, p2.y, t);
-            pathStr+= "C" + cps.p1.x + " " + cps.p1.y + " " + cps.p2.x + " " + cps.p2.y + " " + p2.x + " " + p2.y + " ";
+          // Smooth
+          if (opts.approximate) {
+            p = points[0];
+            pathStr+= "M" + round(p.x) + " " + round(p.y) + " ";
+            for (i = 1; i < points.length - 1; i++) {
+                c = (points[i].x + points[i + 1].x) / 2;
+                d = (points[i].y + points[i + 1].y) / 2;
+                pathStr+= "Q" + round(points[i].x) + " " + round(points[i].y) + " " + c + " " + d + " ";
+            }
+            pathStr+= "T" + round(points[i].x) + " " + round(points[i].y) + " ";
+          } else {
+            p = points[0];
+            pathStr+= "M" + p.x + " " + p.y + " ";
+            for (i = 1; i < points.length - 1; i+=1) {
+              p = points[i - 1];
+              p1 = points[i];
+              p2 = points[i + 1];
+              cps = getControlPoints(p.x, p.y, p1.x, p1.y, p2.x, p2.y, t);
+              pathStr+= "C" + round(cps.p1.x) + " " + round(cps.p1.y) + " " + round(cps.p2.x) + " " + round(cps.p2.y) + " " + round(p2.x) + " " + round(p2.y) + " ";
+            }
+            pathStr+= "T" + round(points[points.length - 1].x) + " " + round(points[points.length - 1].y) + " ";
           }
-          pathStr+= "T" + points[points.length - 1].x + " " + points[points.length - 1].y + " ";
         }
         
         delete opts.smooth;
@@ -690,14 +723,23 @@ var _v = (function() {
      */
     arc: function(cx, cy, r, sAngle, eAngle, counterclockwise, attrs) {
       counterclockwise = typeof counterclockwise === 'boolean' ? counterclockwise : false;
-      var d = 'M ' + cx + ' ' + cy;
+      var
+        d = 'M ' + round(cx) + ', ' + round(cy),
+        cxs,
+        cys,
+        cxe,
+        cye;
       if (eAngle - sAngle === Math.PI * 2) {
         // Circle
         d+= ' m -' + r + ', 0 a ' + r + ',' + r + ' 0 1,0 ' + (r * 2) + ',0 a ' + r + ',' + r + ' 0 1,0 -' + (r * 2) + ',0';
       } else {
-        d+= " L" + (cx + cos(sAngle) * r) + "," + (cy + sin(sAngle) * r) +
+        cxs = round(cx + cos(sAngle) * r);
+        cys = round(cy + sin(sAngle) * r);
+        cxe = round(cx + cos(eAngle) * r);
+        cye = round(cy + sin(eAngle) * r);
+        d+= " L" + cxs + "," + cys +
           " A" + r + "," + r + " 0 " + (eAngle - sAngle > PI ? 1 : 0) + "," + (counterclockwise ? 0 : 1) +
-          " " + (cx + cos(eAngle) * r) + "," + (cy + sin(eAngle) * r) + " Z";
+          " " + cxe + "," + cye + " Z";
       }
       return shape.call(this, "path", {
         d: d
@@ -794,7 +836,6 @@ var _v = (function() {
      * @param {Object} options
      */
     listbox: function( x, y, width, height, items, options ) {
-      
       items = toArray(items).map(function(item) {
         return typeof item === 'string' ? {label: item} : item;
       });
@@ -824,7 +865,7 @@ var _v = (function() {
             itemLayer = _velem.g(),
             lineHeight = parseFloat(_velem.css('line-height')),
             fontSize = parseFloat(_velem.css('font-size')),
-            bulletSize = fontSize * 0.65,
+            bulletSize = round(fontSize * 0.65),
             spacing = lineHeight * 0.2,
             itemWidth,
             itemHeight;
@@ -843,19 +884,19 @@ var _v = (function() {
           
           // Render bullet
           if (shape === 'circle') {
-            itemLayer.circle(x + bulletSize * 0.5, floor(y) + (fontSize - bulletSize) * 0.5 + bulletSize * 0.5, bulletSize * 0.5, bulletAttrs);
+            itemLayer.circle(x + bulletSize / 2, y + (fontSize - bulletSize) / 2 + bulletSize / 2, bulletSize / 2, bulletAttrs);
           } else {
-            itemLayer.rect(x, Math.floor(y) + (fontSize - bulletSize) * 0.5, bulletSize, bulletSize, bulletAttrs);
+            itemLayer.rect(x, round(y) + (fontSize - bulletSize) / 2, bulletSize, bulletSize, bulletAttrs);
           }
           
           // Render label
-          itemLayer.textbox(x + bulletSize + spacing, floor(y), width ? width - bulletSize - spacing : 0, height ? top + height - y : 0, label, itemOpts);
+          itemLayer.textbox(x + bulletSize + spacing, y, width ? width - bulletSize - spacing : 0, height ? top + height - y : 0, label, itemOpts);
           
-          itemWidth = floor(itemLayer.bbox().width);
-          itemHeight = floor(itemLayer.bbox().height + (lineHeight - fontSize));
+          itemWidth = Math.ceil(itemLayer.bbox().width + fontSize);
+          itemHeight = Math.round(itemLayer.bbox().height + (lineHeight - fontSize));
           
           if (horizontal) {
-            x+= itemWidth + fontSize;
+            x+= itemWidth;
             if (width && x > width) {
               y+= itemHeight;
               x = 0;
