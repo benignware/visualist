@@ -23,6 +23,6 @@
     "grunt-contrib-qunit": "^0.5.2",
     "grunt-contrib-uglify": "^0.8.0",
     "grunt-gh-pages": "^0.10.0",
-    "grunt-livemd": "0.0.1"
+    "grunt-livemd": "^0.0.2"
   }
 }
