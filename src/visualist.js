@@ -642,9 +642,10 @@ var _v = (function() {
     /**
      * Renders a smooth graph on every element in the set.
      * @param {Object} points
+     * @param {Object} attrs
      * @param {Object} options
      */
-    graph: function( points, options ) {
+    graph: function( points, attrs, options ) {
       
       this.forEach(function(elem) {
         
@@ -663,7 +664,9 @@ var _v = (function() {
           p1,
           p2,
           cps,
-          path = el.create('path'),
+          path = el.create('path', merge({
+            fill: 'none'
+          }, attrs)),
           pathStr = "";
           
         el.append(path);
@@ -703,11 +706,7 @@ var _v = (function() {
         delete opts.tension;
         delete opts.approximate;
         
-        path.attr(extend({
-          fill: 'none'
-        }, opts, {
-          d: pathStr
-        }));
+        path.attr('d', pathStr);
         
       });
     },
