@@ -26,7 +26,10 @@
     "grunt-livemd": "^0.0.2"
   },
   "dependencies": {
+    "css": "^2.2.1",
     "deepmerge": "^0.2.10",
+    "fontkit": "^1.2.0",
+    "string": "^3.3.1",
     "xmldom": "^0.1.22"
   }
 }

@@ -1,6 +1,14 @@
-var _v = (function() {
-  
-  
+var merge = require('deepmerge');
+var xmldom = require('xmldom');
+var DOMImplementation = xmldom.DOMImplementation;
+var XMLSerializer = xmldom.XMLSerializer;
+var document = (new  DOMImplementation()).createDocument();
+var round = require('./lib/round');
+var hyphenate = require('./lib/hyphenate');
+var css = require('css');
+var S = require('string');
+var fontkit = require('fontkit');
+
   var 
     SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg",
     MATH = Math,
@@ -10,214 +18,7 @@ var _v = (function() {
     sqrt = MATH.sqrt,
     pow = MATH.pow,
     floor = MATH.floor,
-  
-    /**
-     * Rounds a number to precision
-     */ 
-    round = function(num, digits) {
-      digits = typeof digits === 'number' ? digits : 1;
-      if (typeof num === 'object') {
-        for (var x in num) {
-          num[x] = round(num[x]);
-        }
-      } else {
-        // Actually round number
-        var value = parseFloat(num);
-        if (!isNaN(value) && new String(value).length === new String(num).length) {
-          value = parseFloat(value.toFixed(digits));
-          return value;
-        }
-      }
-      return num;
-    },
-  
-    /**
-     * Camelize a string
-     * @param {String} string
-     */ 
-    camelize = (function() {
-      var cache = {};
-      return function(string) {
-        return cache[string] = cache[string] || (function() {
-          return string.replace(/(\-[a-z])/g, function($1){return $1.toUpperCase().replace('-','');});
-        })();
-      };
-    })(),
-  
-    /**
-     * Hyphenate a string
-     * @param {String} string
-     */
-    hyphenate = (function() {
-      var cache = {};
-      return function(string) {
-        return cache[string] = cache[string] || (function() {
-          return string.replace(/([A-Z])/g, function($1){return "-"+$1.toLowerCase();});
-        })();
-      };
-    })(),
-  
-    /**
-     * Extends an object
-     * @param {Boolean} true
-     * @param {Object} destination
-     * @param {Object} source
-     */
-    extend = function(deep, destination, source) {
-      var args = arguments, i = typeof deep === 'boolean' ? 2 : 1, dest = arguments[i - 1], src, prop, value;
-      for (; i < args.length; i++) {
-        src = args[i];
-        for (prop in src) {
-          value = src[prop];
-          if (typeof value !== 'undefined' && value !== null) {
-            if (typeof value === 'object' && value.constructor === Object) {
-              dest[prop] = dest[prop] || {};
-              if (deep) {
-                extend(true, dest[prop], value);
-              }
-            } else {
-              dest[prop] = value;
-            }
-          }
-        }
-      }
-      return dest;
-    },
-    
-    /**
-     * Converts to Array
-     * @param {Boolean} true
-     * @param {Object} destination
-     * @param {Object} source
-     */
-    toArray = function(obj) {
-      
-      //return obj && (obj.length && [].slice.call(obj) || [obj]);
-      
-      if (typeof obj === "undefined") {
-        return [];
-      }
-      
-      var l = obj && obj.length || 0, i, result = [];
-      for (i = 0; i < l; i++) {
-        if (obj[i]) {
-          result.push(obj[i]);
-        }
-      }
-      
-      return result.length && result || [obj];
-    },
-    
-    // DOM Manipulation
-    
-    parent = function(elem) {
-      return elem.parentNode;
-    },
-    
-    append = function( parent, child ) {
-      parent = parent && parent[0] || parent;
-      if (parent && parent.appendChild) {
-        toArray(child).forEach(function(child) {
-          if (child) {
-            parent.appendChild(child);
-          }
-        });
-      }
-    },
-    
-    prepend = function( parent, child ) {
-      parent = parent[0] || parent;
-      toArray(child).forEach(function(child) {
-        parent.insertBefore(child, parent.firstChild);
-      });
-    },
-    
-    remove = function( elem, child ) {
-      if (child) {
-        toArray(child).forEach(function(child) {
-          elem.removeChild(child);
-        });
-      } else if (elem.parentNode) {
-        elem.parentNode.removeChild(elem);
-      }
-    },
-    
-    html = function(elem, string) {
-      if (string) {
-        elem.innerHTML = string;
-      }
-      return elem.innerHTML;
-    },
-    
-    text = function(elem) {
-      return elem.textContent;
-    },
-    
-    attr = function (elem, name, value) {
-      var result = null, obj = {}, prop, px = ['x', 'y', 'dx', 'dy', 'cx', 'cy'];
-      if (typeof name === 'object') {
-        obj = name;
-      } else if (typeof name !== 'undefined'){
-        obj[name] = value;
-      }
-      function mapStyles(name) {
-        return hyphenate(name) + ": " + value[name];
-      }
-      if (Object.keys(obj).length) {
-        for (name in obj) {
-          prop = typeof elem[camelize(name)] !== 'undefined' ? camelize(name) : hyphenate(name);
-          value = obj[name];
-          if (typeof value !== 'undefined') {
-            // Set
-            if (name === 'style' && typeof value === 'object') {
-              value = Object.keys(value).map(mapStyles).join("; ");
-            }
-            if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-              value = px.indexOf(prop) >= 0 ? round(value) : value;
-              elem.setAttribute(prop, value);
-            }
-          } else if (!result) {
-            // Get
-            result = elem.getAttribute(prop);
-          }
-        }
-      }
-      return result;
-    },
-  
-    css = function(elem, name, value) {
-      var map = {}, cssText = null;
-      if (typeof name === 'object') {
-        map = name;
-      } else if (typeof value !== "undefined") {
-        map[name] = value;
-      }
-      cssText = Object.keys(map).map(function(name) {
-        return hyphenate(name) + ": " + map[name];
-      }).join("; ");
-      if (cssText && cssText.length) {
-        elem.style.cssText = elem.style.cssText + cssText;
-        return null;
-      }
-      return elem.style[name] || window.getComputedStyle(elem, null).getPropertyValue(name);
-    },
-    
-    addClass = function(elem, className) {
-      elem.classList.add(className);
-    },
-    
-    hasClass = function(elem, className) {
-      return elem.classList.contains(className);
-    },
-    
-    removeClass = function(elem, className) {
-      elem.classList.remove(className);
-    },
-    
-    toggleClass = function(elem, className) {
-      elem.classList.toggle(className);
-    },
-    
+    fontFace = {},
     /**
      * Gets a pair of bezier control points
      * @param {Number} x0
@@ -244,68 +45,60 @@ var _v = (function() {
         p2: {x: p2x, y: p2y}
       };
     },
-  
+    
     /**
-     * Serializes points as svg path definition
-     * @param {Array} points
+     * Retrieves the computed text length of the first element in the set if available.
      */
-    getPath = function( points ) {
-      return points.map(function(point) {
-        return point.x + "," + point.y;
-      }).join(" ");
-    },
-  
-  
-    /**
-     * Visualist query constructor
-     */
-    _v = function(selector, width, height, attrs) {
-      var arg, i, s, w, h, a, set;
-      for (i = 0, arg; arg = arguments[i]; i++) {
-        if (typeof arg === 'number' || typeof arg === 'string' && !isNaN(parseFloat(arg))) {
-          // Numeric
-          arg = typeof arg === 'number' ? parseFloat(arg) + "px" : arg;
-          if (typeof w !== 'undefined') {
-            h = arg;
-          } else {
-            w = arg;
-          }
-        } else if (typeof arg === 'object' && arg.constructor === Object) {
-          // Plain object
-          a = arg;
-        } else {
-          // Everything else may be a selector
-          s = arg;
+    computedTextLength = function(elem, style) {
+      elem = _v(elem);
+      style = style || typeof window !== 'undefined' && window.getComputedStyle(elem[0]) || elem.style();
+      
+      if (elem.length > 0) {
+        var l;
+        var text = elem[0].firstChild && elem[0].firstChild.data;
+        
+        if (elem[0].getComputedTextLength) {
+          l = elem[0].getComputedTextLength();
+          return l;
         }
+        
+        var fontFamily = style.fontFamily || 'Arial';
+        var file = '/Library/Fonts/' + fontFamily + '.ttf';
+        var fontSize = parseFloat(style.fontSize) || 16;
+        
+        // open a font synchronously 
+        var font = fontFace[fontFamily] = fontFace[fontFamily] || fontkit.openSync(file);
+        var factor = fontSize / font.unitsPerEm;
+        // layout a string, using default shaping features. 
+        // returns a GlyphRun, describing glyphs and positions. 
+        var run = font.layout(text);
+        // get an SVG path for a glyph 
+        var path = run.glyphs[0].path;
+        var width = run.glyphs.map(function(glyph) {
+          return glyph.advanceWidth;
+        }).reduce(function(a, b) {
+          return a + b;
+        });
+        return width * factor;
       }
-      set = s instanceof Visualist ? s : new Visualist(s);
-      set.attr(extend(true, a || {}, {
-        width: w, 
-        height: h
-      }));
-      return set;
+      return null;
     };
-
+    
+    
   /**
    * Visualist Class
    * @param {String} selector
    */
 
-  function Visualist(selector) {
-    var set = null, elem, result, i, svg;
+  function Visualist(element) {
+    var set = null, element, result, i, svg;
     // Collect constructor args
-    if (typeof selector === 'object' && selector.namespaceURI === SVG_NAMESPACE_URI) {
+    if (typeof element === 'object' && element.namespaceURI === SVG_NAMESPACE_URI) {
       // Existing Element
-      set = [selector];
-    } else if (typeof selector === 'string') {
-      // Selector
-      result = document.querySelectorAll(selector);
-      for (i = 0, elem; elem = result[i]; i++) {
-        if (elem.namespaceURI === SVG_NAMESPACE_URI ) {
-          set = set || [];
-          set.push(elem);
-        }
-      }
+      set = [element];
+    } else if (typeof element === 'string') {
+      // TODO: Implement parser
+      // TODO: Query Selector
     }
     if (!set) {
       svg = document.createElementNS(SVG_NAMESPACE_URI, 'svg');
@@ -317,10 +110,42 @@ var _v = (function() {
   
   Visualist.prototype = [];
   
-  // Static methods
-  _v.extend = extend;
-  _v.attr = attr;
-  _v.css = css;
+  /**
+   * Visualist constructor
+   */
+  var _v = function(element, width, height, attrs) {
+    var arg, i, _element, _width, _height, _attrs = {}, set;
+    for (i = 0, arg; arg = arguments[i]; i++) {
+      if (typeof arg === 'number' || typeof arg === 'string' && !isNaN(parseFloat(arg))) {
+        // Numeric
+        arg = typeof arg === 'number' ? parseFloat(arg) + "px" : arg;
+        if (typeof _width !== 'undefined') {
+          _height = arg;
+        } else {
+          _width = arg;
+        }
+      } else if (typeof arg === 'object' && arg.constructor === Object) {
+        // Plain object
+        _attrs = arg;
+      } else {
+        // Everything else may be an element or selector
+        _element = arg;
+      }
+    }
+    attrs = _attrs || {};
+    // Merge width and height arguments withs attrs
+    if (typeof _width !== 'undefined') {
+      attrs.width = _width;
+    }
+    if (typeof _height !== 'undefined') {
+      attrs.height = _height;
+    }
+    // Reuse or create instance
+    set = _element instanceof Visualist ? _element : new Visualist(_element);
+    set.attr(attrs);
+    return set;
+  };
+  
   
   // Plugin API
   _v.fn = Visualist.prototype;
@@ -344,10 +169,12 @@ var _v = (function() {
    * @param {Object} attrs
    * @param {Array} children 
    */
-  function shape(tagName, params, attrs, children) {
+  
+  function shape(tagName, attrs) {
     var self = this;
     this.forEach(function(elem) {
-      _v(elem).append(self.create(tagName, extend(true, {}, attrs, round(params))).append(children));
+      var child = self.create(tagName, merge(attrs, attrs));
+      _v(elem).append(child);
     });
     return this;
   }
@@ -356,122 +183,117 @@ var _v = (function() {
   
   _v.fn.extend({
     
-    size: function() {
-      return this.length;
-    },
-    
-    toArray: function() {
-      return toArray(this);
-    },
-    
-    get: function( index ) {
-      return typeof index !== 'undefined' ? index < 0 ? this[this.length - index] : this[index] : this.toArray();
-    },
-    
-    index: function() {
-      return this[0] && toArray(this[0].parentNode.children).indexOf(this[0]) || -1;
-    },
-    
-    /**
-     * Appends the specified child to the first element in the set.
-     * @param {Object} child
-     */
-    append: function( child ) {
-      if (this[0]) {
-        append(this[0], child);
-      }
-      return this;
-    },
-    /**
-     * Appends the current set of elements to the specified parent
-     * @param {Object} child
-     */
-    appendTo: function( parent ) {
-      this.forEach(function(elem) {
-        if (parent) {
-          append(parent, elem);
-        }
-      });
-      return this;
-    },
-    /**
-     * Prepends the specified child to the first element in the set.
-     * @param {Object} child
-     */
-    prepend: function( child ) {
-      if (this[0]) {
-        prepend(this[0], child);
-      }
-      return this;
-    },
-    /**
-     * Prepends the current set of elements to the specified parent
-     * @param {Object} child
-     */
-    prependTo: function( parent ) {
-      this.forEach(function(elem) {
-        prepend(parent, elem);
-      });
-      return this;
-    },
-    /**
-     * Removes all elements in the set or removes the specified child from the set of matched elements.
-     * @param {Object} child
-     */
-    remove: function( child ) {
-      this.forEach(function(elem) {
-        remove(elem, child);
-      });
-      return this;
-    },
-    /**
-     * Removes children from elements in the set
-     */
-    clear: function() {
-      this.forEach(function(elem) {
-        for (var i = 0; i < elem.childNodes.length; i++) {
-          elem.removeChild(elem.childNodes[i]);
-          i--;
-        }
-      });
-      return this;
-    },
-    /**
-     * Returns the parent node of the first element in the set.
-     */
-    parent: function() {
-      return this[0] && parent(this[0]);
-    },
     /**
      * Get the value of an attribute for the first element in the set of matched elements or set one or more attributes for every matched element.
      * @param {String} name
      * @param {Object} value
      */
     attr: function( name, value ) {
-      var result = this;
-      this.forEach(function(elem) {
-        var ret = attr(elem, name, value);
-        if (ret !== null) {
-          result = ret;
+      var
+        _this = this;
+      if (name && typeof name === 'object' || typeof value !== 'undefined') {
+        // Set
+        var attrs = typeof name === 'object' ? name : (function(name, value) {
+          var attrs = {};
+          attrs[name] = value;
+          return attrs;
+        })(name, value);
+        this.forEach(function(elem) {
+          for (var name in attrs) {
+            value = attrs[name];
+            
+            if (typeof value === 'number' || typeof value === 'string') {
+              // Round value:
+              value = round(value);
+              elem.setAttribute(S(name).dasherize(), value);
+            }
+            
+            if (typeof value === 'object') {
+              if (name === 'style') {
+                _this.style(value);
+              }
+              // TODO: data-attributes
+            }
+          }
+        });
+        return this;
+      } else if (name) {
+        // Get
+        if (this.length) {
+          return this[0].getAttribute(name);
         }
-      });
-      return result;
+        return null;
+      }
+      return this;
     },
+    
     /**
-     * Get the value of a computed style property for the first element in the set of matched elements or set one or more CSS properties for every matched element.
+     * Get the value of an inline style for the first element in the set of matched elements or set one or more inline styles for every matched element.
      * @param {String} name
      * @param {Object} value
      */
-    css: function( name, value ) {
-      var result = this;
-      this.forEach(function(elem) {
-        var ret = css(elem, name, value);
-        if (ret !== null) {
-          result = ret;
+    style: function( name, value ) {
+      
+      if (name && typeof name === 'object' || typeof value !== 'undefined') {
+        var props = typeof name === 'object' ? name : (function(name, value) {
+          var props = {};
+          props[name] = value;
+          return props;
+        })(name, value);
+          
+        this.forEach(function(elem) {
+          // Set
+          var styles = {};
+          var cssText = elem.getAttribute('style');
+          
+          var obj = css.parse('element.style { ' + cssText + ' }');
+          obj.stylesheet.rules[0].declarations.forEach(function(rule) {
+            if (!props.hasOwnProperty(rule.property)) {
+              styles[S(rule.property).camelize()] = rule.value; 
+            }
+          });
+          // Remove empty styles
+          for (var name in props) {
+            var value;
+            if (!props[name]) {
+              delete styles[name];
+            } else {
+              value = props[name];
+              styles[name] = value;
+            }
+          }
+          cssText = Object.keys(styles).map(function(name) {
+            return S(name).dasherize() + ": " + styles[name];
+          }).join("; ");
+          
+          elem.setAttribute('style', cssText);
+        });
+      } else {
+        // Get
+        if (this.length) {
+          var elem = this[0];
+          var styles = {};
+          var cssText = elem.getAttribute('style');
+          var obj = css.parse('element.style { ' + cssText + ' }');
+          obj.stylesheet.rules[0].declarations.forEach(function(rule) {
+            styles[S(rule.property).camelize()] = rule.value; 
+          });
+          return name ? styles[name] : styles;
         }
+        return null;
+      }
+      return this;
+    },
+    
+    svg: function() {
+      var result = "";
+      var xmlSerializer = new XMLSerializer();
+      this.forEach(function(elem) {
+        result+= xmlSerializer.serializeToString(elem);
       });
       return result;
     },
+    
     /**
      * Creates a new element with the specifed tagname.
      * @param {String} tagName
@@ -480,62 +302,72 @@ var _v = (function() {
     create: function( tagName, attrs ) {
       return _v((this[0] && this[0].ownerDocument || document).createElementNS(this[0] && this[0].namespaceURI || SVG_NAMESPACE_URI, tagName)).attr(attrs);
     },
+    
     /**
-     * Gets or sets the width on the first element in the set
-     * @param {Number} width
+     * Appends the specified child to the first element in the set.
+     * @param {Object} child
      */
-    width: function( width ) {
-      //console.warn("deprecated");
-      if (typeof width === 'undefined' && this[0]) {
-        return this[0].getBoundingClientRect().width;
+    append: function( child ) {
+      if (this.length) {
+        this[0].appendChild(child[0] || child);
       }
-      this.attr('width', width);
       return this;
     },
+    
     /**
-     * Gets or sets the height on the first element in the set
-     * @param {Number} height
+     * Removes all elements in the set or removes the specified child from the set of matched elements.
+     * @param {Object} child
      */
-    height: function( height ) {
-      //console.warn("deprecated");
-      if (typeof height === 'undefined' && this[0]) {
-        return this[0].getBoundingClientRect().height;
-      }
-      this.attr('height', height);
+    remove: function( child ) {
+      this.forEach(function(elem) {
+        if (child) {
+          elem.removeChild(child);
+        } else if (elem.parentNode) {
+          elem.parentNode.removeChild(elem);
+        }
+      });
       return this;
     },
-    /**
-     * Retrieves the bounding box of the first element in the set.
-     */
-    bbox: function() {
-      try {
-        var b = this[0] && this[0].getBBox();
-        b = {
-          x: b.x,
-          y: b.y,
-          width: b.width,
-          height: b.height
-        };
-        return b;
-      } catch (e) {
-        return {x: 0, y: 0, width: 0, height: 0};
-      } 
+    
+    parent: function() {
+      return _v(this[0] && this[0].parentNode);
     },
+    
     /**
-     * Retrieves the computed text length of the first element in the set if applicable.
-     */
-    computedTextLength: function() {
-      return this[0] && this[0].getComputedTextLength();
-    },
-    /**
-     * Creates and returns a group layer on the first element in the set
+     * The arc() method creates an arc/curve (used to create circles, or parts of circles). 
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} r
+     * @param {Number} sAngle
+     * @param {Number} eAngle
+     * @param {Boolean} counterclockwise
      * @param {Object} attrs
      */
-    g: function( attrs ) {
-      var g = this.create('g', attrs);
-      _v(this[0]).append(g);
-      return g;
+    arc: function(cx, cy, r, sAngle, eAngle, counterclockwise, attrs) {
+      counterclockwise = typeof counterclockwise === 'boolean' ? counterclockwise : false;
+      var
+        d = 'M ' + round(cx) + ', ' + round(cy),
+        cxs,
+        cys,
+        cxe,
+        cye;
+      if (eAngle - sAngle === Math.PI * 2) {
+        // Circle
+        d+= ' m -' + r + ', 0 a ' + r + ',' + r + ' 0 1,0 ' + (r * 2) + ',0 a ' + r + ',' + r + ' 0 1,0 -' + (r * 2) + ',0';
+      } else {
+        cxs = round(cx + cos(sAngle) * r);
+        cys = round(cy + sin(sAngle) * r);
+        cxe = round(cx + cos(eAngle) * r);
+        cye = round(cy + sin(eAngle) * r);
+        d+= " L" + cxs + "," + cys +
+          " A" + r + "," + r + " 0 " + (eAngle - sAngle > PI ? 1 : 0) + "," + (counterclockwise ? 0 : 1) +
+          " " + cxe + "," + cye + " Z";
+      }
+      return shape.call(this, "path", merge({
+        d: d
+      }, attrs));
     },
+    
     /**
      * Draws a circle on every element in the set.
      * @param {Number} cx
@@ -544,12 +376,13 @@ var _v = (function() {
      * @param {Object} attrs
      */
     circle: function( cx, cy, r, attrs ) {
-      return shape.call(this, "circle", {
+      return shape.call(this, "circle", merge({
         cx: cx, 
         cy: cy, 
         r: r
-      }, attrs);
+      }, attrs));
     },
+    
     /**
      * Draws an ellipse on every element in the set.
      * @param {Number} cx
@@ -559,13 +392,14 @@ var _v = (function() {
      * @param {Object} attrs
      */
     ellipse: function( cx, cy, rx, ry, attrs ) {
-      return shape.call(this, "ellipse", {
+      return shape.call(this, "ellipse", merge({
         cx: cx, 
         cy: cy, 
         rx: rx,
         ry: ry
-      }, attrs);
+      }, attrs));
     },
+    
     /**
      * Draws a rectangle on every element in the set.
      * @param {Number} x
@@ -575,13 +409,14 @@ var _v = (function() {
      * @param {Object} attrs
      */
     rect: function( x, y, width, height, attrs ) {
-      return shape.call(this, "rect", {
+      return shape.call(this, "rect", merge({
         x: x, 
         y: y, 
         width: width,
         height: height
-      }, attrs);
+      }, attrs));
     },
+    
     /**
      * Draws a line on every element in the set.
      * @param {Number} x1
@@ -591,12 +426,12 @@ var _v = (function() {
      * @param {Object} attrs
      */
     line: function( x1, y1, x2, y2, attrs ) {
-      return shape.call(this, "line", {
+      return shape.call(this, "line", merge({
         x1: x1,
         y1: y1,
         x2: x2,
         y2: y2
-      }, attrs);
+      }, attrs));
     },
     /**
      * Draws a polygon on every element in the set.
@@ -604,9 +439,9 @@ var _v = (function() {
      * @param {Object} attrs
      */
     polygon: function( points, attrs ) {
-      return shape.call(this, 'polygon', {
+      return shape.call(this, 'polygon', merge({
         points: getPath(points)
-      }, attrs);
+      }, attrs));
     },
     /**
      * Draws a polygon on every element in the set.
@@ -614,10 +449,11 @@ var _v = (function() {
      * @param {Object} attrs
      */
     polyline: function( points, attrs ) {
-      return shape.call(this, 'polyline', {
+      return shape.call(this, 'polyline', merge({
         points: getPath(points)
-      }, attrs);
+      }, attrs));
     },
+    
     /**
      * Draws a path on every element in the set.
      * @param {String} d
@@ -626,6 +462,7 @@ var _v = (function() {
     path: function( d, attrs ) {
       return shape.call(this, 'path', {d: d}, attrs);
     },
+    
     /**
      * Renders text on every element in the set.
      * @param {Number} x
@@ -634,15 +471,29 @@ var _v = (function() {
      * @param {Object} attrs
      */
     text: function( x, y, string, attrs ) {
-      return shape.call(this, 'text', {
+      var elem = this.create('text', merge(attrs, {
         x: x, 
         y: y
-      }, attrs, [(this[0] && this[0].ownerDocument || document).createTextNode(string)]);
+      }));
+      this.append(elem);
+      elem.append([(this[0] && this[0].ownerDocument || document).createTextNode(string)]);
+      return this;
     },
+    
+    /**
+     * Creates and returns a group layer on the first element in the set
+     * @param {Object} attrs
+     */
+    g: function( attrs ) {
+      var g = this.create('g', attrs);
+      _v(this[0]).append(g);
+      return g;
+    },
+    
+    
     /**
      * Renders a smooth graph on every element in the set.
      * @param {Object} points
-     * @param {Object} attrs
      * @param {Object} options
      */
     graph: function( points, attrs, options ) {
@@ -650,11 +501,11 @@ var _v = (function() {
       this.forEach(function(elem) {
         
         var
-          opts = extend({
-            smooth: false, 
+          opts = merge({
+            smooth: true, 
             tension: 0.4,
             approximate: true
-          }, options),
+          }, options || {}),
           t = !isNaN( opts.tension ) ? opts.tension : 0.5,
           el = _v(elem), 
           p,
@@ -664,9 +515,7 @@ var _v = (function() {
           p1,
           p2,
           cps,
-          path = el.create('path', merge({
-            fill: 'none'
-          }, attrs)),
+          path = el.create('path', attrs),
           pathStr = "";
           
         el.append(path);
@@ -705,45 +554,16 @@ var _v = (function() {
         delete opts.smooth;
         delete opts.tension;
         delete opts.approximate;
-        
-        path.attr('d', pathStr);
+        path.attr(merge({
+          fill: 'none'
+        }, {
+          d: pathStr
+        }));
         
       });
     },
-    /**
-     * The arc() method creates an arc/curve (used to create circles, or parts of circles). 
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} r
-     * @param {Number} sAngle
-     * @param {Number} eAngle
-     * @param {Boolean} counterclockwise
-     * @param {Object} attrs
-     */
-    arc: function(cx, cy, r, sAngle, eAngle, counterclockwise, attrs) {
-      counterclockwise = typeof counterclockwise === 'boolean' ? counterclockwise : false;
-      var
-        d = 'M ' + round(cx) + ', ' + round(cy),
-        cxs,
-        cys,
-        cxe,
-        cye;
-      if (eAngle - sAngle === Math.PI * 2) {
-        // Circle
-        d+= ' m -' + r + ', 0 a ' + r + ',' + r + ' 0 1,0 ' + (r * 2) + ',0 a ' + r + ',' + r + ' 0 1,0 -' + (r * 2) + ',0';
-      } else {
-        cxs = round(cx + cos(sAngle) * r);
-        cys = round(cy + sin(sAngle) * r);
-        cxe = round(cx + cos(eAngle) * r);
-        cye = round(cy + sin(eAngle) * r);
-        d+= " L" + cxs + "," + cys +
-          " A" + r + "," + r + " 0 " + (eAngle - sAngle > PI ? 1 : 0) + "," + (counterclockwise ? 0 : 1) +
-          " " + cxe + "," + cye + " Z";
-      }
-      return shape.call(this, "path", {
-        d: d
-      }, attrs);
-    },
+    
+    
     /**
      * Renders text into a bounding box by wrapping lines at spaces.
      * @param {Object} x
@@ -759,41 +579,44 @@ var _v = (function() {
         self = this;
       
       this.forEach(function(elem) {
-        
         var
           _velem = _v(elem),
           lines = width ? [] : [string], 
           line = [],
-          length = 0,
+          textLength = 0,
           words = width ? string.split(/\s+/) : [],
-          text = self.create('text', extend(true, {}, attrs, {
+          text = self.create('text', merge(attrs || {}, {
             x: x,
             y: y
           })),
           textNode,
-          lineHeight = parseFloat(_velem.css('line-height')),
-          fontSize = parseFloat(_velem.css('font-size')),
-          textAlign = text.css('text-align'),
+          style = text.style(),
+          fontSize = parseFloat(style.fontSize) || 16,
+          lineHeight = fontSize * 1.4,
+          textAlign = (style.textAlign === 'end' || style.textAlign === 'right' ? 1 : style.textAlign === 'center' || style.textAlign === 'middle' ? 0.5 : 0);
           ty = 0;
         
         _velem.append(text);
-        
-        
+
         if (width) {
           // Break lines
           textNode = elem.ownerDocument.createTextNode("");
           text.append(textNode);
           words.forEach(function(word, index) {
             textNode.data = line.join(' ') + ' ' + word;
-            length = text.computedTextLength();
-            if (length > width) {
-              lines.push(line.join(' '));
+            textLength = computedTextLength(text, style);
+            if (textLength > width) {
+              // Break line
+              lines.push({length: lineLength, text: line.join(' ')});
+              lineLength = 0;
               line = [word];
             } else {
+              // Add word to line
+              lineLength = textLength;
               line.push(word);
             }
             if (index === words.length - 1) {
-              lines.push(line.join(' '));
+              lines.push({length: lineLength, text: line.join(' ')});
             }
           });
           text.remove(textNode);
@@ -808,112 +631,14 @@ var _v = (function() {
             tspan = self.create('tspan', {dy: dy});
             text.append(tspan);
             tspan
-              .append(elem.ownerDocument.createTextNode(line))
-              .attr('x', parseInt(text.attr('x'), undefined) + (width - tspan.computedTextLength()) * (textAlign === 'end' || textAlign === 'right' ? 1 : textAlign === 'center' || textAlign === 'middle' ? 0.5 : 0));
+              .append(elem.ownerDocument.createTextNode(line.text));
+            tspan.attr('x', parseInt(text.attr('x'), undefined) + (width - line.length) * textAlign);
           }
         });
       });
-      return this;
-    },
-    /**
-     * Renders an unordered list.
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Array} items
-     * @param {Object} options
-     */
-    list: function( x, y, items, options ) {
-      return this.listbox(x, y, 0, 0, items, options);
-    },
-    /**
-     * Renders an unordered list into the specified bounds.
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} width
-     * @param {Number} height
-     * @param {Array} items
-     * @param {Object} options
-     */
-    listbox: function( x, y, width, height, items, options ) {
-      items = toArray(items).map(function(item) {
-        return typeof item === 'string' ? {label: item} : item;
-      });
-      
-      options = options || {};
-      
-      options = extend({}, {
-        horizontal: false,
-        bullet: {
-          shape: 'circle'
-        }
-      }, options);
-      
-      this.forEach(function(elem) {
-        
-        var top = y;
-        
-        items.forEach(function(item, index) {
-          
-          var
-            _velem = _v(elem),
-            itemOpts = extend(true, {}, options, item),
-            horizontal = itemOpts.horizontal,
-            shape = itemOpts.bullet.shape,
-            label = itemOpts.label,
-            bulletAttrs,
-            itemLayer = _velem.g(),
-            lineHeight = parseFloat(_velem.css('line-height')),
-            fontSize = parseFloat(_velem.css('font-size')),
-            bulletSize = round(fontSize * 0.65),
-            spacing = lineHeight * 0.2,
-            itemWidth,
-            itemHeight;
-          
-          delete itemOpts.bullet.shape;
-          delete itemOpts.horizontal;
-          delete itemOpts.label;
-          
-          bulletAttrs = extend(true, {}, itemOpts, itemOpts.bullet); 
-          
-          delete itemOpts.bullet;
-          
-          if (height && y + fontSize > top + height) {
-            return;
-          }
-          
-          // Render bullet
-          if (shape === 'circle') {
-            itemLayer.circle(x + bulletSize / 2, y + (fontSize - bulletSize) / 2 + bulletSize / 2, bulletSize / 2, bulletAttrs);
-          } else {
-            itemLayer.rect(x, round(y) + (fontSize - bulletSize) / 2, bulletSize, bulletSize, bulletAttrs);
-          }
-          
-          // Render label
-          itemLayer.textbox(x + bulletSize + spacing, y, width ? width - bulletSize - spacing : 0, height ? top + height - y : 0, label, itemOpts);
-          
-          itemWidth = Math.ceil(itemLayer.bbox().width + fontSize);
-          itemHeight = Math.round(itemLayer.bbox().height + (lineHeight - fontSize));
-          
-          if (horizontal) {
-            x+= itemWidth;
-            if (width && x > width) {
-              y+= itemHeight;
-              x = 0;
-            }
-          } else {
-            y+= itemHeight;
-          }
-          
-        });
-    
-      });
-      
       return this;
     }
+    
   });
   
-  return _v;
-  
-}());
-
 module.exports = _v;
