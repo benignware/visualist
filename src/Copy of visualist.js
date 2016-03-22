@@ -6,9 +6,8 @@ var merge = require('deepmerge');
   DOMParser: window.DOMParser
 } : require('xmldom');
 */
-//var impl = typeof window !== 'undefined' ? window : require('./impl/window');
-var impl = require('./impl/window');
-console.log("*** IMPLEMENTATION: ", impl);
+var impl = typeof window !== 'undefined' ? window : require('./impl/window');
+console.log("impl: ", impl.SVGElement);
 
 /*
  * 
@@ -76,6 +75,7 @@ var SVGPoint = require('./lib/svgpoint');
      * Retrieves the computed text length of the first element in the set if available.
      */
     computedTextLength = function(elem, style) {
+      console.log("computedTextLength: ", elem, style);
       return 100;
       elem = _v(elem);
       style = style || typeof window !== 'undefined' && window.getComputedStyle(elem[0]) || elem.style();
@@ -96,7 +96,7 @@ var SVGPoint = require('./lib/svgpoint');
         var font = getFont(style.fontFamily);
         var fontSize = parseFloat(style.fontSize) || 16;
         var factor = fontSize / font.unitsPerEm;
-        //console.log("ascent: ", font.descent * factor, (font.ascent / font.unitsPerEm) * fontSize);
+        console.log("ascent: ", font.descent * factor, (font.ascent / font.unitsPerEm) * fontSize);
         // layout a string, using default shaping features. 
         // returns a GlyphRun, describing glyphs and positions. 
         var run = font.layout(text);
@@ -224,7 +224,7 @@ var SVGPoint = require('./lib/svgpoint');
      * @param {Object} value
      */
     attr: function( name, value ) {
-      //console.log("set attr: ", name, value);
+      console.log("set attr: ", name, value);
       var
         _this = this;
       if (name && typeof name === 'object' || typeof value !== 'undefined') {
@@ -264,7 +264,7 @@ var SVGPoint = require('./lib/svgpoint');
     },
     
     css: function (name, value) {
-      console.log("*** get css: ", name, value);
+      console.log("get css: ", name, value);
       var styles = {};
       var elem = this[0];
       var window = elem.ownerDocument.defaultView;
@@ -344,13 +344,9 @@ var SVGPoint = require('./lib/svgpoint');
       var result = "";
       //var xmlSerializer = new XMLSerializer();
       this.forEach(function(elem) {
-        //console.log("elem: ", elem.outerHTML);
-        //result+= elem.outerHTML;
-        if (typeof elem.outerHTML !== 'undefined') {
-          result+= elem.outerHTML;
-        } else {
-          result+= (new impl.XMLSerializer()).serializeToString(elem);
-        }
+        console.log("elem: ", elem.outerHTML);
+        result+= elem.outerHTML;
+        //result+= xmlSerializer.serializeToString(elem);
       });
       return result;
     },
@@ -544,7 +540,7 @@ var SVGPoint = require('./lib/svgpoint');
      * @param {Object} attrs
      */
     text: function( x, y, string, attrs ) {
-      console.log("*** text: ", x, y, string, attrs);
+      console.log("text: ", x, y, string, attrs, this.css('font-size'));
       var elem = this.create('text', merge(attrs || {}, {
         x: x, 
         y: y
@@ -567,12 +563,7 @@ var SVGPoint = require('./lib/svgpoint');
     bbox: function() {
       // TODO: Check whether added to document view
       console.log("--------- BBOX: ", this[0].nodeName);
-      try {
-        return impl.SVGSVGElement.prototype.getBBox.apply(this[0], arguments);
-      } catch (e) {
-        console.error(e);
-        return null;
-      }
+      
       
       var
         x = 0,
@@ -813,4 +804,5 @@ var SVGPoint = require('./lib/svgpoint');
     }
     
   });
+  console.log("V:", _v);
 module.exports = _v;

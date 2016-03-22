@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <script src="../dist/visualist.js"></script>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      svg {
+        display: block;
+        margin: auto;
+        width: 800px;
+        border: 1px solid blue;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      console.log("element: !", Document.prototype.querySelector);
+      //skewX(50) skewY(10) translate(0,0) scale(0.5,2) 
+      var 
+        svg = _v(800, 600);
+        svg
+          .g({transform: 'translate(100,100)'})
+          .g({transform: 'rotate(90, 50, 50) skewX(20) skewY(30) scale(0.5) translate(100,-60)'})
+          .line(0, 0, 100, 50, {stroke: 'black', strokeWidth: 1})
+          .text(50, 50, 'Hello', {fontSize: 40});
+          
+          
+      var body = document.getElementsByTagName('body')[0];
+      body.appendChild(svg[0]);
+      var bbox = svg.bbox();
+      console.log("append:", bbox);
+      svg.rect(bbox.x, bbox.y, bbox.width, bbox.height, {stroke: 'red', fill: 'transparent'});
+      
+      
+      
+    </script>
+  </body>
+</html>
