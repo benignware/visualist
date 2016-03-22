@@ -33,6 +33,15 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         options: {
+          //require: [ ['./src/impl/browser/xmldom.js', {expose: 'xmldom'} ] ],
+          /*
+          exclude: [
+            './node_modules/xmldom/**',
+            //'./node_modules/fontkit/**',
+            //'./node_modules/css/**',
+            //'./node_modules/xcssmatrix/**',
+            //'./node_modules/string/**'
+          ],*/
           browserifyOptions: {
             standalone: '_v',
             debug: true
