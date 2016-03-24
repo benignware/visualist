@@ -19,15 +19,16 @@
   </head>
   <body>
     <script>
-      console.log("element: !", Document.prototype.querySelector);
       //skewX(50) skewY(10) translate(0,0) scale(0.5,2) 
+      //translate(100,-100) rotate(45, 150, 50) scale(0.5) skewX(50) skewY(20) translate(50,50) 
       var 
         svg = _v(800, 600);
         svg
-          .g({transform: 'translate(100,100)'})
-          .g({transform: 'rotate(90, 50, 50) skewX(20) skewY(30) scale(0.5) translate(100,-60)'})
-          .line(0, 0, 100, 50, {stroke: 'black', strokeWidth: 1})
-          .text(50, 50, 'Hello', {fontSize: 40});
+          .g({transform: 'translate(100,200)', fontSize: 10})
+          .g({transform: 'translate(-800,0) translate(1000,-100) scale(1.5,2) rotate(60) skewX(10) skewY(20)'})
+          .line(20, 20, 50, 80, {stroke: 'black', strokeWidth: 1})
+          .text(50, 50, 'Visualist', {dx: 50, dy: -10})
+          .circle(60,-60,40);
           
           
       var body = document.getElementsByTagName('body')[0];

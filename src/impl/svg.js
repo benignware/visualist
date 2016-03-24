@@ -1,4 +1,5 @@
 var
+  _S = require('string'),
   XCSSMatrix = require('xcssmatrix');
 
 // Partial implementation
@@ -54,8 +55,6 @@ SVGMatrix.prototype.multiply = function(matrix) {
   var
     _this = this;
   
-  var a = this;
-  var b = matrix;
  /*
   a.a = a.a*b.a + a.c*b.b + a.e;
   a.b = a.b*b.a + a.d*b.b + a.f;
@@ -64,12 +63,29 @@ SVGMatrix.prototype.multiply = function(matrix) {
   a.e = a.a*b.e + a.c*b.f + a.e;
   a.f = a.b*b.e + a.d*b.f + a.f;
   */
-  a.a = this.a * matrix.a + this.c * matrix.b;
-  a.b = this.b * matrix.a + this.d * matrix.b;
-  a.c = this.a * matrix.c + this.c * matrix.d;
-  a.d = this.b * matrix.c + this.d * matrix.d;
-  a.e = this.a * matrix.e + this.c * matrix.f + this.e;
-  a.f = this.b * matrix.e + this.d * matrix.f + this.f;
+ 
+  var m = new SVGMatrix();
+  m.a = this.a;
+  m.b = this.b;
+  m.c = this.c;
+  m.d = this.d;
+  m.e = this.e;
+  m.f = this.f;
+  
+  this.a = m.a * matrix.a + m.c * matrix.b;
+  this.b = m.b * matrix.a + m.d * matrix.b;
+  this.c = m.a * matrix.c + m.c * matrix.d;
+  this.d = m.b * matrix.c + m.d * matrix.d;
+  this.e = m.a * matrix.e + m.c * matrix.f + m.e;
+  this.f = m.b * matrix.e + m.d * matrix.f + m.f;
+ /*
+  this.a = m.a * matrix.a + m.c * matrix.b;
+  this.b = m.b * matrix.a + m.d * matrix.b;
+  this.c = m.a * matrix.c + m.c * matrix.d;
+  this.d = m.b * matrix.c + m.d * matrix.d;
+  this.e = m.a * matrix.e + m.c * matrix.f;
+  this.f = m.b * matrix.e + m.d * matrix.f;
+  */
   return this;
 };
 /*
@@ -87,9 +103,6 @@ SVGMatrix.prototype.translate = function(x, y) {
   var m = new SVGMatrix();
   m.e = x;
   m.f = y;
-  /*var m = clone(this);
-  m.e = m.a * x + m.b * y + m.e;
-  m.f = m.c * x + m.d * y + m.f;*/
   return this.multiply(m);
 };
 
@@ -123,6 +136,15 @@ SVGMatrix.prototype.skewX = function(angle) {
   return this.multiply(m);
 };
 
+
+SVGMatrix.prototype.flipY = function() {
+  return this.scaleNonUniform(1, -1);
+};
+
+SVGMatrix.prototype.flipX = function() {
+  return this.scaleNonUniform(-1, 1);
+};
+
 SVGMatrix.prototype.skewY = function(angle) {
   var m = new SVGMatrix();
   m.b = Math.tan( parseFloat(angle) * Math.PI / 180 );
@@ -132,18 +154,13 @@ SVGMatrix.prototype.skewY = function(angle) {
 SVGMatrix.prototype.rotate = function(angle) {
   var cos = Math.cos(angle * Math.PI / 180),
     sin = Math.sin(angle * Math.PI / 180);
-  var m = this;
+  var m = new SVGMatrix();
   m.a = cos;
   m.b = sin;
   m.c = -sin;
   m.d = cos;
-  m.e = 0;
-  m.f = 0;
-  return this;
-    return this.multiply(m);
-    
-    
-    
+  //return this;
+   return this.multiply(m);
     
   /*
   var c0 = Math.cos(0 * Math.PI / 180), 
@@ -205,30 +222,49 @@ SVGMatrix.prototype.rotate = function(angle) {
 SVGMatrix.parse = function (string) {
   var
     statements = ['matrix', 'rotate', 'skewX', 'skewY', 'scale', 'translate'],
-    transforms = {},
+    transforms = [],
     t = null,
     matrix = new SVGMatrix(),
-    re = /(\w+)\s*\(\s*([^\)]*)\s*\)/g,
-    m, st, args, p = SVGMatrix.prototype, method;
+    re = /(\w+)\s*\(\s*([^\)]*\s*)\s*\)/g,
+    m, st, args, p = SVGMatrix.prototype, method, e = null;
   while (m = re.exec(string)) {
     if (m) {
       st = m[1];
-      args = m[2].split(/,|\s+/);
+      console.info("m[2]. ", m[2]);
+      args = m[2].split(/[,\s]+/);
       if (statements.indexOf(st) >= 0) {
-        console.info('valid');
-        transforms[st] = {
+        transforms.push({
+          st: st,
           args: args
-        };
+        });
+      } else {
+        e = true;
       }
     }
   }
+  if (e) {
+    console.log("error parsing svg matrix");
+    return;
+  }
+  transforms.forEach(function(obj) {
+    console.info("exec: ", obj.st);
+    method = obj.st === 'scale' ? 'scaleNonUniform' : obj.st;
+    if (method === 'rotate' && obj.args.length > 1) {
+      matrix = p.translate.call(matrix, obj.args[1], obj.args[2]);
+      matrix = p.rotate.call(matrix, obj.args[0]);
+      matrix = p.translate.call(matrix, -obj.args[1], -obj.args[2]);
+    } else if (p[method]) {
+      matrix = p[method].apply(matrix, obj.args);
+    }
+  });
+  /*
   statements.filter(function(st) {
     return transforms[st];
   }).forEach(function(st) {
     method = st === 'scale' ? 'scaleNonUniform' : st;
     matrix = p[method].apply(matrix, transforms[st].args);
   });
-  
+  */
   return matrix;
 };
 
@@ -364,8 +400,10 @@ SVGSVGElement.prototype.getBBox = (function() {
       
       // Calculate text dimensions
       var elem = node.parentNode;
-      var style = getComputedStyle(elem);
+      var style = getStyle(elem);
+      console.log("style ", style);
       var fontSize = parseFloat(style.fontSize);
+      console.log("style ", fontSize);
       var w = elem.getComputedTextLength();
       var h = fontSize;
 
@@ -435,6 +473,27 @@ SVGSVGElement.prototype.getComputedTextLength = function() {
 };
 
 
+function getStyle(el) {
+  //return getComputedStyle(el);
+  var result = {};
+  while (el.parentNode) {
+    for (var i = 0; i < el.attributes.length; i++) {
+      var attrNode = el.attributes[i];
+      var name = _S(attrNode.name).camelize();
+      var value = attrNode.value;
+      if (!result[name]) {
+        result[name] = value;
+      }
+    }
+    el = el.parentNode;
+  }
+  console.warn("result: ", result);
+  return result;
+}
+
+
 module.exports = {
   'SVGSVGElement': SVGSVGElement
 };
+
+
